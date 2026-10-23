@@ -1,0 +1,121 @@
+{
+  "subjects": [
+    {
+      "id": "sub_0",
+      "name": "تشريح مرضي خاص",
+      "sections": [
+        {
+          "id": "sec_0",
+          "name": "",
+          "lectures": [
+            {
+              "id": "lec_1792728793679_103",
+              "name": "المحاضرة 1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sub_1",
+      "name": "هضمية",
+      "sections": [
+        {
+          "id": "sec_1",
+          "name": "",
+          "lectures": []
+        }
+      ]
+    },
+    {
+      "id": "sub_2",
+      "name": "جراحة عامة",
+      "sections": [
+        {
+          "id": "sec_2",
+          "name": "",
+          "lectures": []
+        }
+      ]
+    },
+    {
+      "id": "sub_3",
+      "name": "خمجية",
+      "sections": [
+        {
+          "id": "sec_3_1",
+          "name": "قسم د. منهل",
+          "lectures": []
+        },
+        {
+          "id": "sec_3_2",
+          "name": "قسم د. أحمد",
+          "lectures": []
+        }
+      ]
+    },
+    {
+      "id": "sub_4",
+      "name": "أذن أنف حنجرة",
+      "sections": [
+        {
+          "id": "sec_4_1",
+          "name": "قسم د. رامي",
+          "lectures": []
+        },
+        {
+          "id": "sec_4_2",
+          "name": "قسم د. عبير",
+          "lectures": []
+        }
+      ]
+    },
+    {
+      "id": "sub_5",
+      "name": "تغذية",
+      "sections": [
+        {
+          "id": "sec_5",
+          "name": "",
+          "lectures": []
+        }
+      ]
+    },
+    {
+      "id": "sub_6",
+      "name": "غدد",
+      "sections": [
+        {
+          "id": "sec_6",
+          "name": "",
+          "lectures": []
+        }
+      ]
+    },
+    {
+      "id": "sub_7",
+      "name": "أشعة",
+      "sections": [
+        {
+          "id": "sec_7",
+          "name": "",
+          "lectures": []
+        }
+      ]
+    },
+    {
+      "id": "sub_8",
+      "name": "أورام",
+      "sections": [
+        {
+          "id": "sec_8",
+          "name": "",
+          "lectures": []
+        }
+      ]
+    }
+  ],
+  "welcomeMessage": "أهلاً بك في منصة Cortex Team.",
+  "logoUrl": "",
+  "coverUrl": ""
+}
