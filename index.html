@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cortex Lectures Tracker - Ultimate V9</title>
+    <title>Cortex Lectures Tracker - Ultimate V12</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         :root {
-            --bg-paper: #FDFBF7;
-            --paper-dark: #F2EBE1;
-            --gold-primary: #C5A059;
-            --gold-dark: #9E7B3C;
-            --gold-light: #E8D5A5;
-            --text-main: #3E362E;
-            --text-muted: #7A6F62;
-            
+            --bg-paper: #FDFBF7; --paper-dark: #F2EBE1;
+            --gold-primary: #C5A059; --gold-dark: #9E7B3C; --gold-light: #E8D5A5;
+            --text-main: #3E362E; --text-muted: #7A6F62;
             --box-size: 130px; 
-            
             --diff-easy-bg: #E8F5E9; --diff-easy-border: #4CAF50;
             --diff-med-bg: #FFF8E1; --diff-med-border: #FFB300;
             --diff-hard-bg: #FFEBEE; --diff-hard-border: #E53935;
@@ -27,42 +24,28 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            background-color: var(--bg-paper);
-            color: var(--text-main);
-            font-family: 'Cairo', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            position: relative;
+            background-color: var(--bg-paper); color: var(--text-main);
+            font-family: 'Cairo', sans-serif; min-height: 100vh; overflow-x: hidden;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; position: relative;
         }
 
-        /* العلامة المائية فاهية جداً ومريحة */
+        /* العلامة المائية الفاهية فوق الجميع */
         #appBgCover {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
-            opacity: 0.04; 
-            mix-blend-mode: multiply; 
-            z-index: 999; 
-            pointer-events: none; 
+            opacity: 0.04; mix-blend-mode: multiply; z-index: 999; pointer-events: none; transition: 0.5s;
         }
 
         .classic-panel {
             background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(253,251,247,0.9));
-            border: 1px solid var(--gold-light);
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(158, 123, 60, 0.08);
-            padding: 20px;
-            backdrop-filter: blur(5px);
+            border: 1px solid var(--gold-light); border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(158, 123, 60, 0.08); padding: 20px; backdrop-filter: blur(5px);
         }
 
         header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 5%; margin-bottom: 20px;
-            border-bottom: 2px solid var(--gold-light);
-            background: rgba(253, 251, 247, 0.95);
-            backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100;
+            padding: 15px 5%; margin-bottom: 20px; border-bottom: 2px solid var(--gold-light);
+            background: rgba(253, 251, 247, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100;
         }
 
         #teamLogo { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--gold-primary); object-fit: cover; background: white; z-index: 1000; position: relative;}
@@ -76,9 +59,7 @@
         .tracker-wrapper {
             width: 95%; margin: 0 auto 50px auto; overflow-x: auto; overflow-y: hidden;
             border: 2px solid var(--gold-primary); border-radius: 10px; background: rgba(255,255,255,0.9);
-            box-shadow: 0 10px 30px rgba(158, 123, 60, 0.1);
-            touch-action: pan-x pan-y; 
-            position: relative; z-index: 50; 
+            box-shadow: 0 10px 30px rgba(158, 123, 60, 0.1); touch-action: pan-x pan-y; position: relative; z-index: 50; 
         }
         
         .tracker-table { display: flex; flex-direction: column; min-width: max-content; }
@@ -87,83 +68,47 @@
 
         .subject-col {
             position: sticky; right: 0; background: rgba(255,255,255,0.95); z-index: 60;
-            width: 170px; display: flex; flex-direction: column; 
-            border-left: 2px solid var(--gold-light); backdrop-filter: blur(5px);
+            width: 170px; display: flex; flex-direction: column; border-left: 2px solid var(--gold-light); backdrop-filter: blur(5px);
         }
 
-        .subject-main {
-            padding: 15px 10px; font-weight: 800; color: var(--gold-dark); text-align: center;
-            font-size: 1.1rem; flex: 1; display: flex; align-items: center; justify-content: center;
-        }
+        .subject-main { padding: 15px 10px; font-weight: 800; color: var(--gold-dark); text-align: center; font-size: 1.1rem; flex: 1; display: flex; align-items: center; justify-content: center; }
         .subject-main.split { border-bottom: 1px dashed var(--gold-light); flex: none; }
 
         .subject-sections-col { display: flex; flex-direction: column; flex: 1; }
-        .subject-section-label {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            padding: 10px; font-size: 0.9rem; font-weight: bold; color: var(--text-main);
-            border-bottom: 1px solid rgba(0,0,0,0.05); text-align: center; background: rgba(197, 160, 89, 0.05);
-        }
+        .subject-section-label { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; font-size: 0.9rem; font-weight: bold; color: var(--text-main); border-bottom: 1px solid rgba(0,0,0,0.05); text-align: center; background: rgba(197, 160, 89, 0.05); }
         .subject-section-label:last-child { border-bottom: none; }
 
         .lectures-col { display: flex; flex-direction: column; flex: 1; }
-        .lectures-track {
-            flex: 1; display: flex; padding: 15px; gap: 15px; align-items: center; flex-wrap: nowrap;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
+        .lectures-track { flex: 1; display: flex; padding: 15px; gap: 15px; align-items: center; flex-wrap: nowrap; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .lectures-track:last-child { border-bottom: none; }
 
-        /* المحاضرة بلون داكن وواضح */
+        /* المحاضرة بلون ورقي داكن وواضح جداً */
         .lec-box {
             width: var(--box-size); height: var(--box-size); min-width: var(--box-size);
-            border-radius: 12px; border: 2px solid var(--gold-dark);
-            background: #D3C5AB; 
-            color: #2D251D;
-            display: flex; flex-direction: column;
-            justify-content: space-between; align-items: center; cursor: pointer;
-            position: relative; transition: 0.3s all; padding: 6px; 
-            box-shadow: inset 0 2px 5px rgba(255,255,255,0.4), 0 3px 6px rgba(0,0,0,0.08);
-            
-            /* تأثير الظهور الفوري */
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 12px; border: 2px solid var(--gold-dark); background: #D3C5AB; color: #2D251D;
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center; cursor: pointer;
+            position: relative; transition: 0.3s all; padding: 6px; box-shadow: inset 0 2px 5px rgba(255,255,255,0.4), 0 3px 6px rgba(0,0,0,0.08);
+            animation: popIn 0.2s ease-out forwards;
         }
-
-        @keyframes popIn {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         
-        .lec-box.done { 
-            background: var(--gold-primary); color: white; border-color: var(--gold-dark); 
-            box-shadow: 0 0 15px rgba(197, 160, 89, 0.6); 
-        }
-        
+        .lec-box.done { background: var(--gold-primary); color: white; border-color: var(--gold-dark); box-shadow: 0 0 15px rgba(197, 160, 89, 0.6); }
         .lec-box.diff-easy { background-color: var(--diff-easy-bg) !important; border-color: var(--diff-easy-border) !important; color: #1B5E20 !important; box-shadow: 0 0 15px rgba(76, 175, 80, 0.5); }
         .lec-box.diff-med { background-color: var(--diff-med-bg) !important; border-color: var(--diff-med-border) !important; color: #E65100 !important; box-shadow: 0 0 15px rgba(255, 179, 0, 0.5); }
         .lec-box.diff-hard { background-color: var(--diff-hard-bg) !important; border-color: var(--diff-hard-border) !important; color: #B71C1C !important; box-shadow: 0 0 15px rgba(229, 57, 53, 0.5); }
 
         .lec-num { font-weight: 800; font-size: calc(var(--box-size) * 0.30); margin-top: auto; margin-bottom: auto; }
-        
         .lec-dates-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 2px; }
-        .lec-date-text { 
-            font-size: calc(var(--box-size) * 0.13); font-weight: 800; color: inherit; 
-            line-height: 1.2; white-space: nowrap; overflow: hidden;
-            background: rgba(255, 255, 255, 0.3); padding: 1px 6px; border-radius: 6px; width: 90%; text-align: center;
-        }
+        .lec-date-text { font-size: calc(var(--box-size) * 0.13); font-weight: 800; color: inherit; line-height: 1.2; white-space: nowrap; overflow: hidden; background: rgba(255, 255, 255, 0.3); padding: 1px 6px; border-radius: 6px; width: 90%; text-align: center; }
         .lec-box.done .lec-date-text { background: rgba(0, 0, 0, 0.15); }
 
         .lec-indicators { position: absolute; top: -6px; right: -6px; display: flex; gap: 3px; }
         .dot { width: calc(var(--box-size) * 0.14); height: calc(var(--box-size) * 0.14); min-width: 14px; min-height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .dot.note { background: #F39C12; }
-        .dot.file { background: #3498DB; }
+        .dot.note { background: #F39C12; } .dot.file { background: #3498DB; }
 
         .admin-quick-ctrls { gap: 8px; margin-right: 15px; border-right: 2px dashed var(--gold-light); padding-right: 15px; }
-        .admin-quick-ctrls button {
-            width: 42px; height: 42px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.3rem;
-            display: flex; justify-content: center; align-items: center; color: white; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: relative; z-index: 100;
-        }
-        .btn-add-lec { background: #4CAF50; }
-        .btn-remove-lec { background: #F44336; }
+        .admin-quick-ctrls button { width: 42px; height: 42px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.3rem; display: flex; justify-content: center; align-items: center; color: white; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; z-index: 100; }
+        .btn-add-lec { background: #4CAF50; } .btn-remove-lec { background: #F44336; }
         .admin-quick-ctrls button:active { transform: scale(0.9); }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(62, 54, 46, 0.85); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
@@ -180,22 +125,20 @@
         .viewer-body iframe { width: 100%; height: 100%; border: none; }
         .viewer-body img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        .toast-notification {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: linear-gradient(135deg, var(--danger), #E53935); color: white;
-            padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 25px rgba(229,57,53,0.4);
-            display: flex; align-items: center; gap: 15px; font-weight: bold; opacity: 0; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000;
-        }
+        .toast-notification { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: linear-gradient(135deg, var(--danger), #E53935); color: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 10px 25px rgba(229,57,53,0.4); display: flex; align-items: center; gap: 15px; font-weight: bold; opacity: 0; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000; }
         .toast-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
         ::-webkit-scrollbar { height: 10px; width: 8px; }
         ::-webkit-scrollbar-track { background: var(--paper-dark); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: var(--gold-primary); border-radius: 10px; }
+        
+        #cloudSyncStatus { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; z-index: 1000; display: none; }
     </style>
 </head>
 <body>
 
     <div id="appBgCover"></div>
+    <div id="cloudSyncStatus"><i class="fas fa-sync fa-spin"></i> جاري مزامنة التعديلات...</div>
 
     <header>
         <div class="logo-container">
@@ -215,7 +158,7 @@
         <div class="tracker-table" id="trackerTable"></div>
     </div>
 
-    <!-- بوابة الدخول -->
+    <!-- النوافذ -->
     <div class="modal" id="welcomeModal">
         <div class="classic-panel modal-content" style="text-align: center;">
             <h2 style="color: var(--gold-dark); font-family: 'Amiri', serif; margin-bottom: 15px;">بوابة الدخول</h2>
@@ -225,16 +168,13 @@
         </div>
     </div>
 
-    <!-- لوحة تفاصيل المحاضرة -->
     <div class="modal" id="lectureModal">
         <div class="classic-panel modal-content">
             <i class="fas fa-times close-modal" onclick="closeModal('lectureModal')"></i>
-            
             <div style="border-bottom: 2px solid var(--gold-light); padding-bottom: 10px; margin-bottom: 20px;">
                 <div style="color: var(--text-muted); font-size: 0.9rem;" id="modalSubName"></div>
                 <div style="font-family: 'Amiri', serif; font-size: 1.6rem; color: var(--gold-dark);" id="modalLecTitle"></div>
             </div>
-
             <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 140px;">
                     <label style="font-size: 0.9rem; color: var(--gold-dark); font-weight: bold;">حالة الدراسة:</label>
@@ -243,26 +183,19 @@
                 <div style="flex: 1; min-width: 140px;">
                     <label style="font-size: 0.9rem; color: var(--gold-dark); font-weight: bold;">مستوى الصعوبة:</label>
                     <select id="selDiff" onchange="saveCurrentLectureDiff(this.value)">
-                        <option value="normal">لم يُحدد</option>
-                        <option value="easy">سهلة 🟢</option>
-                        <option value="med">متوسطة 🟡</option>
-                        <option value="hard">صعبة 🔴</option>
+                        <option value="normal">لم يُحدد</option><option value="easy">سهلة 🟢</option><option value="med">متوسطة 🟡</option><option value="hard">صعبة 🔴</option>
                     </select>
                 </div>
             </div>
-
             <div style="margin-bottom: 20px;">
                 <label style="color: var(--gold-dark); font-weight: bold;">تذكير بمراجعة المحاضرة يوم:</label>
                 <input type="date" id="inpReviewDate" onchange="saveCurrentLectureReview(this.value)">
-                <small style="color: var(--danger); font-weight: bold; display: block; margin-top: 5px;"><i class="fas fa-bell"></i> سيظهر لك إشعار تنبيهي عند فتح الموقع في هذا اليوم.</small>
             </div>
-
             <div style="background: rgba(52, 152, 219, 0.05); padding: 15px; border-radius: 8px; border: 1px solid #3498DB; margin-bottom: 20px;">
-                <label style="color: #2980B9; font-weight: bold;"><i class="fas fa-paperclip"></i> ملفات المحاضرة (صور / PDF):</label>
+                <label style="color: #2980B9; font-weight: bold;"><i class="fas fa-paperclip"></i> ملفات المحاضرة الخاصة بك:</label>
                 <input type="file" id="inpFile" onchange="handleLectureFile(event)">
                 <div id="fileDownloadZone" style="margin-top: 10px; display: flex; gap: 10px;"></div>
             </div>
-
             <div style="background: rgba(197, 160, 89, 0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--gold-light);">
                 <label style="color: var(--gold-dark); font-weight: bold;"><i class="fas fa-sticky-note"></i> الورقيات:</label>
                 <div id="notesListContainer" style="display:flex; flex-direction:column; gap:10px; margin-top:10px; max-height: 200px; overflow-y: auto;"></div>
@@ -272,7 +205,6 @@
         </div>
     </div>
 
-    <!-- العارض -->
     <div class="modal" id="viewerModal">
         <div class="modal-content">
             <div class="viewer-header">
@@ -286,31 +218,23 @@
         </div>
     </div>
 
-    <!-- مركز القيادة -->
     <div class="modal" id="adminModal">
         <div class="classic-panel modal-content">
             <i class="fas fa-times close-modal" onclick="closeModal('adminModal')"></i>
-            <h2 style="color: var(--danger); margin-bottom: 20px; font-family: 'Amiri', serif;"><i class="fas fa-shield-halved"></i> مركز القيادة</h2>
+            <h2 style="color: var(--danger); margin-bottom: 20px; font-family: 'Amiri', serif;"><i class="fas fa-cloud"></i> مركز القيادة السحابي</h2>
             
             <div style="border: 1px solid var(--gold-light); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h3 style="color: var(--gold-dark); font-size: 1.1rem;">إضافة مادة جديدة (قسم واحد)</h3>
+                <h3 style="color: var(--gold-dark); font-size: 1.1rem;">إضافة مادة جديدة</h3>
                 <input type="text" id="adminNewSubName" placeholder="اسم المادة...">
                 <button class="btn-primary" onclick="adminAddSubject()">إضافة المادة</button>
             </div>
 
-            <div style="border: 1px solid var(--gold-light); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h3 style="color: var(--gold-dark); font-size: 1.1rem;">نظام المشرفين (Co-Admins)</h3>
-                <input type="text" id="adminCoUser" placeholder="اسم حساب المشرف الجديد...">
-                <input type="password" id="adminCoPass" placeholder="كلمة المرور الخاصة به...">
-                <button class="btn-primary" onclick="adminAddCoAdmin()" style="background: #4A7C59;">تسجيل المشرف</button>
-            </div>
-
             <div style="border: 1px solid var(--gold-light); padding: 15px; border-radius: 8px;">
-                <h3 style="color: var(--gold-dark); font-size: 1.1rem;">التخصيص الملكي</h3>
-                <label>لوغو الفريق:</label> <input type="file" accept="image/*" onchange="adminUpload(event, 'logo')">
-                <label style="margin-top: 10px;">علامة مائية للخلفية (Cover):</label> <input type="file" accept="image/*" onchange="adminUpload(event, 'cover')">
+                <h3 style="color: var(--gold-dark); font-size: 1.1rem;">تخصيص الواجهة للجميع</h3>
+                <label>لوغو الفريق:</label> <input type="file" accept="image/*" onchange="adminUpload(event, 'logoUrl')">
+                <label style="margin-top: 10px;">علامة مائية للخلفية:</label> <input type="file" accept="image/*" onchange="adminUpload(event, 'coverUrl')">
                 <label style="margin-top: 10px;">رسالة الترحيب:</label> <textarea id="adminWelcomeText" rows="2"></textarea>
-                <button class="btn-primary" onclick="adminSaveSettings()">تحديث الرسالة فقط</button>
+                <button class="btn-primary" onclick="adminSaveSettings()">تحديث الرسالة</button>
             </div>
 
             <button class="btn-primary" onclick="exitAdminMode()" style="background: #555; margin-top: 25px;">
@@ -319,11 +243,7 @@
         </div>
     </div>
 
-    <!-- التنبيهات -->
-    <div class="toast-notification" id="toastRemind">
-        <i class="fas fa-exclamation-circle" style="font-size: 1.5rem;"></i>
-        <div id="toastText">لديك مراجعات اليوم!</div>
-    </div>
+    <div class="toast-notification" id="toastRemind"><i class="fas fa-exclamation-circle" style="font-size: 1.5rem;"></i><div id="toastText">لديك مراجعات اليوم!</div></div>
 
     <script>
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -336,8 +256,19 @@
         const ADMIN_SECRET = "101cortexteam101";
         let isAdminUnlocked = false;
 
-        // V9 Database - لحل مشكلة الحفظ نهائياً وجعل كل شيء يعتمد على IndexedDB العميق
-        const DB_NAME = "CortexTeamTrackerV9"; 
+        // إعدادات فايربيس (اختياري للربط بين أجهزة الطلاب)
+        const firebaseConfig = {
+            // "databaseURL": "https://your-project.firebaseio.com"
+        };
+        
+        let dbRef = null;
+        if(Object.keys(firebaseConfig).length > 0) {
+            firebase.initializeApp(firebaseConfig);
+            dbRef = firebase.database().ref('cortexGlobalDataV11');
+        }
+
+        // الحفاظ على اسم القاعدة V11 لكي لا تفقد بياناتك وملفاتك!
+        const DB_NAME = "CortexTeamTrackerV11"; 
         let localDB;
         function initIndexedDB() {
             return new Promise((resolve, reject) => {
@@ -356,54 +287,57 @@
         async function getLocal(store, key) { return new Promise(r => { const tx = localDB.transaction(store, 'readonly'); const req = tx.objectStore(store).get(key); req.onsuccess = () => r(req.result); req.onerror = () => r(null); }); }
 
         let studentState = { name: "", progress: {} }; 
-        let globalData = { subjects: [], welcomeMessage: "أهلاً بك في منصة Cortex Team.", coAdmins: [] };
+        let globalData = { subjects: [], welcomeMessage: "أهلاً بك في منصة Cortex Team.", logoUrl: "", coverUrl: "", coAdmins: [] };
 
-        if(globalData.subjects.length === 0) {
-            globalData.subjects = [
-                { id: 'sub_0', name: 'تشريح مرضي خاص', sections: [{id:'sec_0', name:'', lectures:[]}] },
-                { id: 'sub_1', name: 'هضمية', sections: [{id:'sec_1', name:'', lectures:[]}] },
-                { id: 'sub_2', name: 'جراحة عامة', sections: [{id:'sec_2', name:'', lectures:[]}] },
-                { id: 'sub_3', name: 'خمجية', sections: [
-                    {id:'sec_3_1', name:'قسم د. منهل', lectures:[]},
-                    {id:'sec_3_2', name:'قسم د. أحمد', lectures:[]}
-                ]},
-                { id: 'sub_4', name: 'أذن أنف حنجرة', sections: [
-                    {id:'sec_4_1', name:'قسم د. رامي', lectures:[]},
-                    {id:'sec_4_2', name:'قسم د. عبير', lectures:[]}
-                ]},
-                { id: 'sub_5', name: 'تغذية', sections: [{id:'sec_5', name:'', lectures:[]}] },
-                { id: 'sub_6', name: 'غدد', sections: [{id:'sec_6', name:'', lectures:[]}] },
-                { id: 'sub_7', name: 'أشعة', sections: [{id:'sec_7', name:'', lectures:[]}] },
-                { id: 'sub_8', name: 'أورام', sections: [{id:'sec_8', name:'', lectures:[]}] }
-            ];
-        }
+        const defaultSubjects = [
+            { id: 'sub_0', name: 'تشريح مرضي خاص', sections: [{id:'sec_0', name:'', lectures:[]}] },
+            { id: 'sub_1', name: 'هضمية', sections: [{id:'sec_1', name:'', lectures:[]}] },
+            { id: 'sub_2', name: 'جراحة عامة', sections: [{id:'sec_2', name:'', lectures:[]}] },
+            { id: 'sub_3', name: 'خمجية', sections: [{id:'sec_3_1', name:'قسم د. منهل', lectures:[]}, {id:'sec_3_2', name:'قسم د. أحمد', lectures:[]}]},
+            { id: 'sub_4', name: 'أذن أنف حنجرة', sections: [{id:'sec_4_1', name:'قسم د. رامي', lectures:[]}, {id:'sec_4_2', name:'قسم د. عبير', lectures:[]}]},
+            { id: 'sub_5', name: 'تغذية', sections: [{id:'sec_5', name:'', lectures:[]}] },
+            { id: 'sub_6', name: 'غدد', sections: [{id:'sec_6', name:'', lectures:[]}] },
+            { id: 'sub_7', name: 'أشعة', sections: [{id:'sec_7', name:'', lectures:[]}] },
+            { id: 'sub_8', name: 'أورام', sections: [{id:'sec_8', name:'', lectures:[]}] }
+        ];
 
-        // الحل الجذري لمشكلة فقدان البيانات: كل شيء يُحفظ في IndexedDB وليس LocalStorage
-        function saveGlobalData() { 
-            renderTable(); // تحديث فوري ولحظي للشاشة
-            updateZanka(); 
-            // الحفظ في الخلفية بقاعدة البيانات العميقة دون إيقاف المتصفح
-            saveLocal('globalStore', 'cortex_data', globalData); 
-        }
-
-        async function applyGlobals() {
-            let savedLogo = await getLocal('globalStore', 'logo');
-            if(savedLogo) document.getElementById('teamLogo').src = savedLogo;
-            let savedCover = await getLocal('globalStore', 'cover');
-            if(savedCover) document.getElementById('appBgCover').style.backgroundImage = `url(${savedCover})`;
+        // ----------------- قلب النظام: دالة الحفظ الذكية -----------------
+        async function saveGlobalData() { 
+            renderTable(); updateZanka(); applyGlobals();
+            await saveLocal('globalStore', 'cortexGlobalData', JSON.parse(JSON.stringify(globalData))); // حفظ نسخة نظيفة وعميقة
+            
+            if(dbRef) {
+                document.getElementById('cloudSyncStatus').style.display = 'block';
+                dbRef.set(globalData).then(() => {
+                    setTimeout(()=> document.getElementById('cloudSyncStatus').style.display = 'none', 1000);
+                });
+            }
         }
 
         async function initApp() {
             await initIndexedDB();
-            
-            // استرجاع كل البيانات من IndexedDB بدلاً من الـ LocalStorage
             let savedState = await getLocal('studentData', 'state');
             if(savedState) studentState = savedState;
-            
-            let savedGlobal = await getLocal('globalStore', 'cortex_data');
-            if(savedGlobal) globalData = savedGlobal;
-            
-            await applyGlobals(); 
+
+            let offlineGlobal = await getLocal('globalStore', 'cortexGlobalData');
+            if(offlineGlobal && offlineGlobal.subjects) {
+                globalData = offlineGlobal;
+            } else {
+                globalData.subjects = JSON.parse(JSON.stringify(defaultSubjects));
+            }
+
+            if(dbRef) {
+                dbRef.on('value', async (snapshot) => {
+                    const data = snapshot.val();
+                    if(data && data.subjects) { 
+                        globalData = data; 
+                        await saveLocal('globalStore', 'cortexGlobalData', JSON.parse(JSON.stringify(globalData))); 
+                    }
+                    renderTable(); updateZanka(); applyGlobals();
+                });
+            } else {
+                renderTable(); updateZanka(); applyGlobals();
+            }
 
             if(!studentState.name) {
                 document.getElementById('welcomeMsgDisplay').innerText = globalData.welcomeMessage;
@@ -411,15 +345,14 @@
             } else handleLoginSuccess();
         }
 
-        function isUserAdmin() {
-            if(studentState.name.trim() === "حمزة عمار") return true;
-            let found = globalData.coAdmins.find(a => a.user === studentState.name.trim());
-            return found ? true : false;
+        function applyGlobals() {
+            if(globalData.logoUrl) document.getElementById('teamLogo').src = globalData.logoUrl;
+            if(globalData.coverUrl) document.getElementById('appBgCover').style.backgroundImage = `url(${globalData.coverUrl})`;
         }
 
         function handleLoginSuccess() {
             document.getElementById('studentNameDisplay').innerText = `طابت أوقاتك، ${studentState.name}`;
-            if(isUserAdmin()) document.getElementById('adminBtnIcon').style.display = 'block';
+            if(studentState.name.trim() === "حمزة عمار") document.getElementById('adminBtnIcon').style.display = 'block';
             renderTable(); updateZanka(); checkReminders();
         }
 
@@ -428,311 +361,185 @@
             if(name) { studentState.name = name; await saveLocal('studentData', 'state', studentState); closeModal('welcomeModal'); handleLoginSuccess(); }
         }
 
-        // الزووم
+        // --- الزووم ---
         const zoomWrapper = document.getElementById('zoomWrapper');
         let initialDistance = 0, initialBoxSize = 130, currentBoxSize = 130;
-
         zoomWrapper.addEventListener('touchstart', (e) => {
             if (e.touches.length === 2) {
                 initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
                 initialBoxSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--box-size'));
             }
         }, { passive: false });
-
         zoomWrapper.addEventListener('touchmove', (e) => {
             if (e.touches.length === 2) {
                 e.preventDefault(); 
                 let currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                let distDiff = currentDist - initialDistance;
-                currentBoxSize = initialBoxSize + (distDiff * 0.5); 
-                if (currentBoxSize < 40) currentBoxSize = 40; 
-                if (currentBoxSize > 400) currentBoxSize = 400; 
+                currentBoxSize = initialBoxSize + ((currentDist - initialDistance) * 0.5); 
+                if (currentBoxSize < 40) currentBoxSize = 40; if (currentBoxSize > 400) currentBoxSize = 400; 
                 document.documentElement.style.setProperty('--box-size', currentBoxSize + 'px');
             }
         }, { passive: false });
-
         zoomWrapper.addEventListener('wheel', (e) => {
             if(e.ctrlKey) {
                 e.preventDefault();
-                let delta = e.deltaY > 0 ? -15 : 15;
-                currentBoxSize += delta;
-                if(currentBoxSize < 40) currentBoxSize = 40;
-                if(currentBoxSize > 400) currentBoxSize = 400;
+                currentBoxSize += e.deltaY > 0 ? -15 : 15;
+                if(currentBoxSize < 40) currentBoxSize = 40; if(currentBoxSize > 400) currentBoxSize = 400;
                 document.documentElement.style.setProperty('--box-size', currentBoxSize + 'px');
             }
         }, {passive: false});
 
-        // بناء الجدول
+        // ---------------- الحل الأسطوري لمنع تكرار النسخ (Atomic Rendering) ----------------
+        let currentRenderId = 0;
         async function renderTable() {
-            const table = document.getElementById('trackerTable');
-            table.innerHTML = '';
+            const renderId = ++currentRenderId;
+            const fragment = document.createDocumentFragment();
             
             for(let sub of globalData.subjects) {
                 let row = document.createElement('div'); row.className = 'tracker-row';
-                
                 let subCol = document.createElement('div'); subCol.className = 'subject-col';
-                let subMain = document.createElement('div'); subMain.className = 'subject-main';
-                subMain.innerText = sub.name;
-                
+                let subMain = document.createElement('div'); subMain.className = 'subject-main'; subMain.innerText = sub.name;
                 if(sub.sections.length > 1 || sub.sections[0].name !== '') subMain.classList.add('split');
                 subCol.appendChild(subMain);
-
                 let subSecCol = document.createElement('div'); subSecCol.className = 'subject-sections-col';
                 let lecCol = document.createElement('div'); lecCol.className = 'lectures-col';
 
                 for(let sec of sub.sections) {
-                    if(sec.name) {
-                        let secLabel = document.createElement('div'); secLabel.className = 'subject-section-label';
-                        secLabel.innerText = sec.name;
-                        subSecCol.appendChild(secLabel);
-                    }
-
+                    if(sec.name) { let secLabel = document.createElement('div'); secLabel.className = 'subject-section-label'; secLabel.innerText = sec.name; subSecCol.appendChild(secLabel); }
                     let track = document.createElement('div'); track.className = 'lectures-track';
-                    
                     if(isAdminUnlocked) {
                         let adminDiv = document.createElement('div'); adminDiv.className = 'admin-quick-ctrls'; adminDiv.style.display = 'flex';
-                        adminDiv.innerHTML = `
-                            <button class="btn-add-lec" onclick="adminQuickAdd('${sub.id}', '${sec.id}'); event.stopPropagation();"><i class="fas fa-plus"></i></button>
-                            <button class="btn-remove-lec" onclick="adminQuickRemove('${sub.id}', '${sec.id}'); event.stopPropagation();"><i class="fas fa-minus"></i></button>
-                        `;
+                        adminDiv.innerHTML = `<button class="btn-add-lec" onclick="adminQuickAdd('${sub.id}', '${sec.id}'); event.stopPropagation();"><i class="fas fa-plus"></i></button><button class="btn-remove-lec" onclick="adminQuickRemove('${sub.id}', '${sec.id}'); event.stopPropagation();"><i class="fas fa-minus"></i></button>`;
                         track.appendChild(adminDiv);
                     }
-                    
                     let count = 1;
                     for(let lec of sec.lectures) {
                         const prog = studentState.progress[lec.id] || {};
                         const hasFile = await getLocal('files', lec.id) ? true : false;
                         
+                        // الإجهاض إذا بدأت عملية رسم أحدث لمنع التكرار (Race Condition Fix)
+                        if(renderId !== currentRenderId) return; 
+
                         let boxClasses = 'lec-box';
-                        if(prog.done) {
-                            boxClasses += ' done';
-                            if(prog.diff && prog.diff !== 'normal') boxClasses += ' diff-' + prog.diff;
-                        }
-
-                        let indicatorsHTML = '<div class="lec-indicators">';
-                        if(hasFile) indicatorsHTML += '<div class="dot file"></div>';
-                        if(prog.notes && prog.notes.length > 0) indicatorsHTML += '<div class="dot note"></div>';
-                        indicatorsHTML += '</div>';
-
-                        let datesHTML = '<div class="lec-dates-container">';
-                        if(prog.studyDate) datesHTML += `<span class="lec-date-text">د: ${formatDate(prog.studyDate)}</span>`;
-                        if(prog.reviewDate) datesHTML += `<span class="lec-date-text">م: ${formatDate(prog.reviewDate)}</span>`;
-                        datesHTML += '</div>';
-
-                        let box = document.createElement('div');
-                        box.className = boxClasses;
-                        box.onclick = () => openLectureDetail(sub.id, sec.id, lec.id);
-                        box.innerHTML = `${indicatorsHTML}<div class="lec-num">${count}</div>${datesHTML}`;
-                        track.appendChild(box);
-                        count++;
+                        if(prog.done) { boxClasses += ' done'; if(prog.diff && prog.diff !== 'normal') boxClasses += ' diff-' + prog.diff; }
+                        let indicatorsHTML = '<div class="lec-indicators">'; if(hasFile) indicatorsHTML += '<div class="dot file"></div>'; if(prog.notes && prog.notes.length > 0) indicatorsHTML += '<div class="dot note"></div>'; indicatorsHTML += '</div>';
+                        let datesHTML = '<div class="lec-dates-container">'; if(prog.studyDate) datesHTML += `<span class="lec-date-text">د: ${formatDate(prog.studyDate)}</span>`; if(prog.reviewDate) datesHTML += `<span class="lec-date-text">م: ${formatDate(prog.reviewDate)}</span>`; datesHTML += '</div>';
+                        let box = document.createElement('div'); box.className = boxClasses; box.onclick = () => openLectureDetail(sub.id, sec.id, lec.id); box.innerHTML = `${indicatorsHTML}<div class="lec-num">${count}</div>${datesHTML}`; track.appendChild(box); count++;
                     }
                     lecCol.appendChild(track);
                 }
-                
                 if(sub.sections.length > 1 || sub.sections[0].name !== '') subCol.appendChild(subSecCol);
-                
-                row.appendChild(subCol);
-                row.appendChild(lecCol);
-                table.appendChild(row);
+                row.appendChild(subCol); row.appendChild(lecCol); fragment.appendChild(row);
+            }
+            
+            // التأكد النهائي ووضع العناصر في الشاشة بضربة واحدة
+            if(renderId === currentRenderId) {
+                const table = document.getElementById('trackerTable');
+                table.innerHTML = '';
+                table.appendChild(fragment);
             }
         }
 
         function formatDate(dateStr) { if(!dateStr) return ''; const d = new Date(dateStr); return `${d.getDate()}/${d.getMonth()+1}`; }
-
         function updateZanka() {
-            let total = 0, done = 0;
-            globalData.subjects.forEach(sub => { sub.sections.forEach(sec => { sec.lectures.forEach(lec => { 
-                total++; if(studentState.progress[lec.id]?.done) done++; 
-            }); }); });
+            let total = 0, done = 0; globalData.subjects.forEach(sub => { sub.sections.forEach(sec => { sec.lectures.forEach(lec => { total++; if(studentState.progress[lec.id]?.done) done++; }); }); });
             let percent = total === 0 ? 0 : Math.round(((total - done) / total) * 100);
-            document.getElementById('zankaPercent').innerText = percent + '%';
-            document.getElementById('zankaBar').style.width = (100 - percent) + '%';
+            document.getElementById('zankaPercent').innerText = percent + '%'; document.getElementById('zankaBar').style.width = (100 - percent) + '%';
             const bar = document.getElementById('zankaBar');
-            if(percent > 70) bar.style.background = 'linear-gradient(90deg, #E53935, #EF5350)';
-            else if(percent > 30) bar.style.background = 'linear-gradient(90deg, #FBC02D, #FFCA28)';
-            else bar.style.background = 'linear-gradient(90deg, #43A047, #66BB6A)';
+            if(percent > 70) bar.style.background = 'linear-gradient(90deg, #E53935, #EF5350)'; else if(percent > 30) bar.style.background = 'linear-gradient(90deg, #FBC02D, #FFCA28)'; else bar.style.background = 'linear-gradient(90deg, #43A047, #66BB6A)';
         }
 
         let activeLecId = null, activeSubId = null, activeSecId = null;
-
         async function openLectureDetail(subId, secId, lecId) {
             activeSubId = subId; activeSecId = secId; activeLecId = lecId;
-            const sub = globalData.subjects.find(s => s.id === subId);
-            const sec = sub.sections.find(s => s.id === secId);
-            const lec = sec.lectures.find(l => l.id === lecId);
+            const sub = globalData.subjects.find(s => s.id === subId); const sec = sub.sections.find(s => s.id === secId); const lec = sec.lectures.find(l => l.id === lecId);
             if(!studentState.progress[lecId]) studentState.progress[lecId] = { done: false, diff: 'normal', notes: [] };
             const prog = studentState.progress[lecId];
-
-            document.getElementById('modalSubName').innerText = sub.name + (sec.name ? ` (${sec.name})` : '');
-            document.getElementById('modalLecTitle').innerText = lec.name;
-            
+            document.getElementById('modalSubName').innerText = sub.name + (sec.name ? ` (${sec.name})` : ''); document.getElementById('modalLecTitle').innerText = lec.name;
             const btnDone = document.getElementById('btnToggleDone');
             if(prog.done) { btnDone.style.background = 'var(--success)'; btnDone.style.color = 'white'; btnDone.innerHTML = '<i class="fas fa-check"></i> تم دراستها'; }
             else { btnDone.style.background = 'white'; btnDone.style.color = 'var(--gold-dark)'; btnDone.innerHTML = 'تأكيد الإنجاز'; }
-
-            document.getElementById('selDiff').value = prog.diff || 'normal';
-            document.getElementById('inpReviewDate').value = prog.reviewDate || '';
-            
+            document.getElementById('selDiff').value = prog.diff || 'normal'; document.getElementById('inpReviewDate').value = prog.reviewDate || '';
             renderNotes();
-
-            const fileObj = await getLocal('files', lecId);
-            const dlZone = document.getElementById('fileDownloadZone');
-            if(fileObj) {
-                dlZone.innerHTML = `
-                    <button onclick="viewActiveFile()" style="background:#8E44AD; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; flex:1;"><i class="fas fa-eye"></i> قراءة ضمن التطبيق</button>
-                    <button onclick="downloadActiveFile()" style="background:#3498DB; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-download"></i></button>
-                `;
-            } else dlZone.innerHTML = '';
-
+            const fileObj = await getLocal('files', lecId); const dlZone = document.getElementById('fileDownloadZone');
+            if(fileObj) { dlZone.innerHTML = `<button onclick="viewActiveFile()" style="background:#8E44AD; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; flex:1;"><i class="fas fa-eye"></i> قراءة ضمن التطبيق</button><button onclick="downloadActiveFile()" style="background:#3498DB; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-download"></i></button>`; } 
+            else dlZone.innerHTML = '';
             document.getElementById('lectureModal').style.display = 'flex';
         }
 
         async function toggleCurrentLecture() {
-            let p = studentState.progress[activeLecId]; p.done = !p.done;
-            p.studyDate = p.done ? new Date().toISOString().split('T')[0] : null;
-            await saveLocal('studentData', 'state', studentState);
-            openLectureDetail(activeSubId, activeSecId, activeLecId); renderTable(); updateZanka();
+            let p = studentState.progress[activeLecId]; p.done = !p.done; p.studyDate = p.done ? new Date().toISOString().split('T')[0] : null;
+            await saveLocal('studentData', 'state', studentState); openLectureDetail(activeSubId, activeSecId, activeLecId); renderTable(); updateZanka();
         }
-
         function saveCurrentLectureDiff(val) { studentState.progress[activeLecId].diff = val; saveLocal('studentData', 'state', studentState); renderTable(); }
         function saveCurrentLectureReview(val) { studentState.progress[activeLecId].reviewDate = val; saveLocal('studentData', 'state', studentState); renderTable(); }
-
         function handleLectureFile(event) {
-            const file = event.target.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                await saveLocal('files', activeLecId, { name: file.name, type: file.type, data: e.target.result });
-                openLectureDetail(activeSubId, activeSecId, activeLecId); renderTable();
-            };
+            const file = event.target.files[0]; if(!file) return; const reader = new FileReader();
+            reader.onload = async function(e) { await saveLocal('files', activeLecId, { name: file.name, type: file.type, data: e.target.result }); openLectureDetail(activeSubId, activeSecId, activeLecId); renderTable(); };
             reader.readAsDataURL(file);
         }
-
         async function viewActiveFile() {
-            const fileObj = await getLocal('files', activeLecId); if(!fileObj) return;
-            const vc = document.getElementById('viewerContent');
-            document.getElementById('viewerTitle').innerText = fileObj.name;
-            if(fileObj.type.startsWith('image/')) { vc.innerHTML = `<img src="${fileObj.data}">`; document.getElementById('viewerModal').style.display = 'flex'; } 
-            else if(fileObj.type === 'application/pdf') { vc.innerHTML = `<iframe src="${fileObj.data}"></iframe>`; document.getElementById('viewerModal').style.display = 'flex'; } 
-            else { alert("يتطلب التنزيل."); downloadActiveFile(); }
+            const fileObj = await getLocal('files', activeLecId); if(!fileObj) return; const vc = document.getElementById('viewerContent'); document.getElementById('viewerTitle').innerText = fileObj.name;
+            if(fileObj.type.startsWith('image/')) { vc.innerHTML = `<img src="${fileObj.data}">`; document.getElementById('viewerModal').style.display = 'flex'; } else if(fileObj.type === 'application/pdf') { vc.innerHTML = `<iframe src="${fileObj.data}"></iframe>`; document.getElementById('viewerModal').style.display = 'flex'; } else { alert("يتطلب التنزيل."); downloadActiveFile(); }
         }
-
-        async function downloadActiveFile() {
-            const fileObj = await getLocal('files', activeLecId);
-            if(fileObj) { const link = document.createElement("a"); link.href = fileObj.data; link.download = fileObj.name; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
-        }
-
+        async function downloadActiveFile() { const fileObj = await getLocal('files', activeLecId); if(fileObj) { const link = document.createElement("a"); link.href = fileObj.data; link.download = fileObj.name; document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
         function renderNotes() {
-            const list = document.getElementById('notesListContainer'); list.innerHTML = '';
-            let notes = studentState.progress[activeLecId].notes || [];
-            notes.forEach((n, idx) => {
-                list.innerHTML += `<div style="background:#FFF9C4; border-right:4px solid #FBC02D; padding:10px; border-radius:4px; margin-bottom:5px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><small style="color:#888;">${n.date}</small> <i class="fas fa-trash" style="color:#E53935; cursor:pointer;" onclick="deleteNote(${idx})"></i></div>
-                    <div style="white-space:pre-wrap;">${n.text}</div>
-                </div>`;
-            });
+            const list = document.getElementById('notesListContainer'); list.innerHTML = ''; let notes = studentState.progress[activeLecId].notes || [];
+            notes.forEach((n, idx) => { list.innerHTML += `<div style="background:#FFF9C4; border-right:4px solid #FBC02D; padding:10px; border-radius:4px; margin-bottom:5px;"><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><small style="color:#888;">${n.date}</small> <i class="fas fa-trash" style="color:#E53935; cursor:pointer;" onclick="deleteNote(${idx})"></i></div><div style="white-space:pre-wrap;">${n.text}</div></div>`; });
         }
-        function addNewNote() {
-            const txt = document.getElementById('newNoteInput').value.trim(); if(!txt) return;
-            if(!studentState.progress[activeLecId].notes) studentState.progress[activeLecId].notes = [];
-            studentState.progress[activeLecId].notes.push({ text: txt, date: new Date().toLocaleString('ar-SY', {month: 'short', day: 'numeric'}) });
-            document.getElementById('newNoteInput').value = ''; saveLocal('studentData', 'state', studentState); renderNotes(); renderTable();
-        }
+        function addNewNote() { const txt = document.getElementById('newNoteInput').value.trim(); if(!txt) return; if(!studentState.progress[activeLecId].notes) studentState.progress[activeLecId].notes = []; studentState.progress[activeLecId].notes.push({ text: txt, date: new Date().toLocaleString('ar-SY', {month: 'short', day: 'numeric'}) }); document.getElementById('newNoteInput').value = ''; saveLocal('studentData', 'state', studentState); renderNotes(); renderTable(); }
         function deleteNote(idx) { studentState.progress[activeLecId].notes.splice(idx, 1); saveLocal('studentData', 'state', studentState); renderNotes(); renderTable(); }
-
         function checkReminders() {
-            const today = new Date().toISOString().split('T')[0];
-            let list = [];
-            for(let lecId in studentState.progress) {
-                if(studentState.progress[lecId].reviewDate === today) {
-                    globalData.subjects.forEach(sub => { sub.sections.forEach(sec => {
-                        let lec = sec.lectures.find(l => l.id === lecId); 
-                        if(lec) list.push(`${sub.name} ${sec.name ? '('+sec.name+')' : ''} - ${lec.name}`); 
-                    }); });
-                }
-            }
-            if(list.length > 0) {
-                setTimeout(() => {
-                    const toast = document.getElementById('toastRemind');
-                    document.getElementById('toastText').innerHTML = `لديك مراجعات مبرمجة لليوم:<br>${list.join('<br>')}`;
-                    toast.classList.add('show');
-                    setTimeout(() => toast.classList.remove('show'), 8000);
-                    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                }, 2000);
-            }
+            const today = new Date().toISOString().split('T')[0]; let list = [];
+            for(let lecId in studentState.progress) { if(studentState.progress[lecId].reviewDate === today) { globalData.subjects.forEach(sub => { sub.sections.forEach(sec => { let lec = sec.lectures.find(l => l.id === lecId); if(lec) list.push(`${sub.name} ${sec.name ? '('+sec.name+')' : ''} - ${lec.name}`); }); }); } }
+            if(list.length > 0) { setTimeout(() => { const toast = document.getElementById('toastRemind'); document.getElementById('toastText').innerHTML = `لديك مراجعات مبرمجة لليوم:<br>${list.join('<br>')}`; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 8000); if(navigator.vibrate) navigator.vibrate([200, 100, 200]); }, 2000); }
         }
 
         function openAdminLogin() {
             if(isAdminUnlocked) { document.getElementById('adminModal').style.display = 'flex'; return; }
-            const pass = prompt("الرمز السري لمركز القيادة:");
-            if(!pass) return;
-
-            let authSuccess = false;
-            if(pass === ADMIN_SECRET && studentState.name.trim() === "حمزة عمار") authSuccess = true;
-            else {
-                let coAdmin = globalData.coAdmins.find(a => a.user === studentState.name.trim() && a.pass === pass);
-                if(coAdmin) authSuccess = true;
-            }
-
-            if(authSuccess) {
-                isAdminUnlocked = true;
-                document.getElementById('adminWelcomeText').value = globalData.welcomeMessage;
-                renderTable(); 
-                document.getElementById('adminModal').style.display = 'flex';
-                alert("تم تفعيل مركز القيادة! الإضافة تتم الآن بلحظتها.");
+            const pass = prompt("الرمز السري لمركز القيادة:"); if(!pass) return;
+            if(pass === ADMIN_SECRET && studentState.name.trim() === "حمزة عمار") {
+                isAdminUnlocked = true; document.getElementById('adminWelcomeText').value = globalData.welcomeMessage; renderTable(); document.getElementById('adminModal').style.display = 'flex';
             } else alert("صلاحيات مرفوضة!");
         }
-
-        function exitAdminMode() {
-            isAdminUnlocked = false;
-            closeModal('adminModal');
-            renderTable(); 
-        }
-
-        // دالة الإضافة الفورية واللحظية
-        function adminQuickAdd(subId, secId) {
-            let sub = globalData.subjects.find(s => s.id === subId);
-            let sec = sub.sections.find(s => s.id === secId);
-            let safeId = 'lec_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-            sec.lectures.push({ id: safeId, name: 'المحاضرة ' + (sec.lectures.length + 1) });
-            
-            // الدالة السحرية تحدث الشاشة فوراً وتحفظ بالخلفية بدون أي تأخير
-            saveGlobalData();
+        function exitAdminMode() { isAdminUnlocked = false; closeModal('adminModal'); renderTable(); }
+        
+        function adminQuickAdd(subId, secId) { 
+            let sub = globalData.subjects.find(s => s.id === subId); let sec = sub.sections.find(s => s.id === secId); 
+            let safeId = 'lec_' + Date.now() + '_' + Math.floor(Math.random() * 1000); 
+            sec.lectures.push({ id: safeId, name: 'المحاضرة ' + (sec.lectures.length + 1) }); 
+            saveGlobalData(); 
         }
         
-        function adminQuickRemove(subId, secId) {
-            let sub = globalData.subjects.find(s => s.id === subId);
-            let sec = sub.sections.find(s => s.id === secId);
-            if(sec.lectures.length > 0) { if(confirm("هل أنت متأكد من حذف آخر محاضرة تم إضافتها في هذا القسم؟")) { sec.lectures.pop(); saveGlobalData(); } }
+        function adminQuickRemove(subId, secId) { 
+            let sub = globalData.subjects.find(s => s.id === subId); let sec = sub.sections.find(s => s.id === secId); 
+            if(sec.lectures.length > 0) { if(confirm("هل أنت متأكد من الحذف؟")) { sec.lectures.pop(); saveGlobalData(); } } 
         }
-
-        function adminAddSubject() {
-            const subName = document.getElementById('adminNewSubName').value.trim(); if(!subName) return;
-            globalData.subjects.push({ id: 'sub_' + Date.now(), name: subName, sections: [{id:'sec_' + Date.now(), name:'', lectures:[]}] });
-            saveGlobalData(); document.getElementById('adminNewSubName').value = ''; alert("تمت إضافة المادة.");
-        }
-        function adminAddCoAdmin() {
-            const user = document.getElementById('adminCoUser').value.trim();
-            const pass = document.getElementById('adminCoPass').value.trim();
-            if(!user || !pass) return;
-            globalData.coAdmins.push({ user, pass });
-            saveGlobalData(); document.getElementById('adminCoUser').value = ''; document.getElementById('adminCoPass').value = ''; alert("تم الإضافة بنجاح!");
-        }
+        function adminAddSubject() { const subName = document.getElementById('adminNewSubName').value.trim(); if(!subName) return; globalData.subjects.push({ id: 'sub_' + Date.now(), name: subName, sections: [{id:'sec_' + Date.now(), name:'', lectures:[]}] }); saveGlobalData(); document.getElementById('adminNewSubName').value = ''; alert("تمت إضافة المادة."); }
         
         function adminUpload(event, type) {
             const file = event.target.files[0]; if(!file) return;
             const reader = new FileReader();
-            reader.onload = async function(e) { 
-                const base64Data = e.target.result;
-                await saveLocal('globalStore', type, base64Data); 
-                await applyGlobals(); 
-                alert("تم الحفظ بنجاح!");
+            reader.onload = function(e) { 
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let maxW = type === 'coverUrl' ? 1200 : 300; let maxH = type === 'coverUrl' ? 1200 : 300;
+                    let w = img.width; let h = img.height;
+                    if(w > maxW) { h = Math.round(h*=maxW/w); w = maxW; }
+                    if(h > maxH) { w = Math.round(w*=maxH/h); h = maxH; }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6); 
+                    globalData[type] = compressedBase64;
+                    saveGlobalData(); alert("تم الرفع والحفظ بنجاح!");
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
         
         function adminSaveSettings() { globalData.welcomeMessage = document.getElementById('adminWelcomeText').value.trim(); saveGlobalData(); closeModal('adminModal'); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
         window.onload = initApp;
     </script>
 </body>
