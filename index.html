@@ -318,6 +318,7 @@
         }
 
         // ----------------- رفع التعديلات آلياً كـ Commit في GitHub -----------------
+       // ----------------- رفع التعديلات آلياً كـ Commit في GitHub -----------------
         async function saveGlobalData() { 
             // تحديث الشاشة فوراً
             renderTable(); updateZanka(); applyGlobals();
@@ -331,10 +332,12 @@
             statusUI.innerHTML = '<i class="fas fa-code-branch fa-spin"></i> جاري رفع التعديلات لمستودع GitHub...';
 
             try {
-                const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
+                // ملاحظة: تأكد أن فرعك في المستودع اسمه main، وإذا كان master قم بتغيير الكلمة هنا
+                const BRANCH_NAME = 'main'; 
+                const apiUrl = https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE_PATH};
                 
                 // جلب SHA الملف الحالي للتحديث
-                const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` }});
+                const getRes = await fetch(apiUrl, { headers: { 'Authorization': token ${token} }});
                 let sha = null;
                 if(getRes.ok) { const getData = await getRes.json(); sha = getData.sha; }
                 
@@ -342,26 +345,31 @@
                 // تشفير يدعم اللغة العربية بصيغة Base64
                 const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
                 
+                // الحل الهندسي لمنع خطأ 422: لا نرسل sha إذا كان الملف غير موجود
+                let requestBody = {
+                    message: 'تحديث بيانات Cortex Tracker (آلي)',
+                    content: contentBase64,
+                    branch: BRANCH_NAME
+                };
+                if(sha) requestBody.sha = sha; 
+                
                 const putRes = await fetch(apiUrl, {
                     method: 'PUT',
-                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: 'تحديث بيانات Cortex Tracker (آلي)',
-                        content: contentBase64,
-                        sha: sha,
-                        branch: 'main'
-                    })
+                    headers: { 'Authorization': token ${token}, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
                 });
                 
                 if(putRes.ok) {
                     statusUI.innerHTML = '<i class="fas fa-check"></i> تم التحديث! (سيظهر للطلاب خلال 60 ثانية)';
                     setTimeout(() => statusUI.style.display = 'none', 3000);
                 } else {
-                    throw new Error();
+                    const errorDetails = await putRes.json();
+                    console.error("GitHub API Error:", errorDetails);
+                    throw new Error("API Rejected the request");
                 }
             } catch(e) {
-                statusUI.innerHTML = '<i class="fas fa-times"></i> فشل الرفع، تأكد من الـ Token.';
-                setTimeout(() => statusUI.style.display = 'none', 4000);
+                statusUI.innerHTML = '<i class="fas fa-times"></i> فشل الرفع، تأكد من الـ Token واسم المستودع.';
+                setTimeout(() => statusUI.style.display = 'none', 5000);
             }
         }
 
