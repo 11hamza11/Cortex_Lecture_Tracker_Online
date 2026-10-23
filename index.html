@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cortex Lectures Tracker - Ultimate V12</title>
+    <title>Cortex Lectures Tracker - GitHub Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         :root {
             --bg-paper: #FDFBF7; --paper-dark: #F2EBE1;
@@ -29,7 +26,6 @@
             -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; position: relative;
         }
 
-        /* العلامة المائية الفاهية فوق الجميع */
         #appBgCover {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
@@ -82,7 +78,6 @@
         .lectures-track { flex: 1; display: flex; padding: 15px; gap: 15px; align-items: center; flex-wrap: nowrap; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .lectures-track:last-child { border-bottom: none; }
 
-        /* المحاضرة بلون ورقي داكن وواضح جداً */
         .lec-box {
             width: var(--box-size); height: var(--box-size); min-width: var(--box-size);
             border-radius: 12px; border: 2px solid var(--gold-dark); background: #D3C5AB; color: #2D251D;
@@ -132,13 +127,13 @@
         ::-webkit-scrollbar-track { background: var(--paper-dark); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: var(--gold-primary); border-radius: 10px; }
         
-        #cloudSyncStatus { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; z-index: 1000; display: none; }
+        #githubSyncStatus { position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; z-index: 1000; display: none; border: 1px solid var(--gold-primary); }
     </style>
 </head>
 <body>
 
     <div id="appBgCover"></div>
-    <div id="cloudSyncStatus"><i class="fas fa-sync fa-spin"></i> جاري مزامنة التعديلات...</div>
+    <div id="githubSyncStatus"><i class="fas fa-code-branch fa-spin"></i> جاري تحديث الأكواد في مستودع GitHub...</div>
 
     <header>
         <div class="logo-container">
@@ -221,12 +216,19 @@
     <div class="modal" id="adminModal">
         <div class="classic-panel modal-content">
             <i class="fas fa-times close-modal" onclick="closeModal('adminModal')"></i>
-            <h2 style="color: var(--danger); margin-bottom: 20px; font-family: 'Amiri', serif;"><i class="fas fa-cloud"></i> مركز القيادة السحابي</h2>
+            <h2 style="color: var(--danger); margin-bottom: 20px; font-family: 'Amiri', serif;"><i class="fas fa-terminal"></i> مركز تحكم GitOps</h2>
             
+            <div style="background: rgba(197, 160, 89, 0.1); padding: 15px; border-radius: 8px; border: 1px dashed var(--gold-dark); margin-bottom: 20px;">
+                <label style="color: var(--gold-dark); font-weight: bold;">أدخل GitHub Token (للمزامنة المباشرة):</label>
+                <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxx...">
+                <small style="display:block; margin-top:5px; color:var(--text-muted);">يُحفظ بأمان في جهازك فقط للسماح للكود بتعديل البيانات آلياً.</small>
+                <button class="btn-primary" onclick="saveGitHubToken()" style="padding: 8px;">تأكيد التوكن</button>
+            </div>
+
             <div style="border: 1px solid var(--gold-light); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 <h3 style="color: var(--gold-dark); font-size: 1.1rem;">إضافة مادة جديدة</h3>
                 <input type="text" id="adminNewSubName" placeholder="اسم المادة...">
-                <button class="btn-primary" onclick="adminAddSubject()">إضافة المادة</button>
+                <button class="btn-primary" onclick="adminAddSubject()">إضافة المادة للجدول</button>
             </div>
 
             <div style="border: 1px solid var(--gold-light); padding: 15px; border-radius: 8px;">
@@ -234,7 +236,7 @@
                 <label>لوغو الفريق:</label> <input type="file" accept="image/*" onchange="adminUpload(event, 'logoUrl')">
                 <label style="margin-top: 10px;">علامة مائية للخلفية:</label> <input type="file" accept="image/*" onchange="adminUpload(event, 'coverUrl')">
                 <label style="margin-top: 10px;">رسالة الترحيب:</label> <textarea id="adminWelcomeText" rows="2"></textarea>
-                <button class="btn-primary" onclick="adminSaveSettings()">تحديث الرسالة</button>
+                <button class="btn-primary" onclick="adminSaveSettings()">نشر التحديثات</button>
             </div>
 
             <button class="btn-primary" onclick="exitAdminMode()" style="background: #555; margin-top: 25px;">
@@ -256,19 +258,14 @@
         const ADMIN_SECRET = "101cortexteam101";
         let isAdminUnlocked = false;
 
-        // إعدادات فايربيس (اختياري للربط بين أجهزة الطلاب)
-        const firebaseConfig = {
-            // "databaseURL": "https://your-project.firebaseio.com"
-        };
-        
-        let dbRef = null;
-        if(Object.keys(firebaseConfig).length > 0) {
-            firebase.initializeApp(firebaseConfig);
-            dbRef = firebase.database().ref('cortexGlobalDataV11');
-        }
+        // ==========================================
+        // 🚀 إعدادات GitHub API (غيّر هذه المتغيرات لتناسب حسابك)
+        // ==========================================
+        const GITHUB_USERNAME = "11hamza11"; // ضع اسم حسابك هنا
+        const GITHUB_REPO = "Cortex_Lecture_TrackerOnline";  // ضع اسم المستودع هنا
+        const DATA_FILE_PATH = "data.json";   // سيتم إنشاء وتحديث هذا الملف آلياً
 
-        // الحفاظ على اسم القاعدة V11 لكي لا تفقد بياناتك وملفاتك!
-        const DB_NAME = "CortexTeamTrackerV11"; 
+        const DB_NAME = "CortexTeamTrackerGitHub"; 
         let localDB;
         function initIndexedDB() {
             return new Promise((resolve, reject) => {
@@ -277,7 +274,7 @@
                     let db = e.target.result;
                     if(!db.objectStoreNames.contains('studentData')) db.createObjectStore('studentData');
                     if(!db.objectStoreNames.contains('files')) db.createObjectStore('files');
-                    if(!db.objectStoreNames.contains('globalStore')) db.createObjectStore('globalStore');
+                    if(!db.objectStoreNames.contains('adminStore')) db.createObjectStore('adminStore');
                 };
                 req.onsuccess = (e) => { localDB = e.target.result; resolve(); };
                 req.onerror = (e) => reject(e);
@@ -287,7 +284,7 @@
         async function getLocal(store, key) { return new Promise(r => { const tx = localDB.transaction(store, 'readonly'); const req = tx.objectStore(store).get(key); req.onsuccess = () => r(req.result); req.onerror = () => r(null); }); }
 
         let studentState = { name: "", progress: {} }; 
-        let globalData = { subjects: [], welcomeMessage: "أهلاً بك في منصة Cortex Team.", logoUrl: "", coverUrl: "", coAdmins: [] };
+        let globalData = { subjects: [], welcomeMessage: "أهلاً بك في منصة Cortex Team.", logoUrl: "", coverUrl: "" };
 
         const defaultSubjects = [
             { id: 'sub_0', name: 'تشريح مرضي خاص', sections: [{id:'sec_0', name:'', lectures:[]}] },
@@ -301,16 +298,70 @@
             { id: 'sub_8', name: 'أورام', sections: [{id:'sec_8', name:'', lectures:[]}] }
         ];
 
-        // ----------------- قلب النظام: دالة الحفظ الذكية -----------------
+        // جلب البيانات من GitHub (قراءة فقط لجميع الطلاب)
+        async function fetchGitHubData() {
+            try {
+                // نستخدم خدعة التوقيت لمنع المتصفح من تخزين النسخة القديمة
+                const res = await fetch(`${DATA_FILE_PATH}?t=${Date.now()}`);
+                if(res.ok) {
+                    const data = await res.json();
+                    if(data && data.subjects) {
+                        globalData = data;
+                        await saveLocal('adminStore', 'offlineBackup', JSON.parse(JSON.stringify(globalData)));
+                    }
+                }
+            } catch(e) {
+                console.log("الاعتماد على النسخة المحلية مؤقتاً.");
+                let offline = await getLocal('adminStore', 'offlineBackup');
+                if(offline) globalData = offline;
+            }
+        }
+
+        // ----------------- رفع التعديلات آلياً كـ Commit في GitHub -----------------
         async function saveGlobalData() { 
+            // تحديث الشاشة فوراً
             renderTable(); updateZanka(); applyGlobals();
-            await saveLocal('globalStore', 'cortexGlobalData', JSON.parse(JSON.stringify(globalData))); // حفظ نسخة نظيفة وعميقة
-            
-            if(dbRef) {
-                document.getElementById('cloudSyncStatus').style.display = 'block';
-                dbRef.set(globalData).then(() => {
-                    setTimeout(()=> document.getElementById('cloudSyncStatus').style.display = 'none', 1000);
+            await saveLocal('adminStore', 'offlineBackup', JSON.parse(JSON.stringify(globalData)));
+
+            const token = await getLocal('adminStore', 'gh_token');
+            if(!token) return; // إذا لم يكن هناك توكن، سيكتفي بالحفظ المحلي
+
+            const statusUI = document.getElementById('githubSyncStatus');
+            statusUI.style.display = 'block';
+            statusUI.innerHTML = '<i class="fas fa-code-branch fa-spin"></i> جاري رفع التعديلات لمستودع GitHub...';
+
+            try {
+                const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
+                
+                // جلب SHA الملف الحالي للتحديث
+                const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` }});
+                let sha = null;
+                if(getRes.ok) { const getData = await getRes.json(); sha = getData.sha; }
+                
+                const contentStr = JSON.stringify(globalData, null, 2);
+                // تشفير يدعم اللغة العربية بصيغة Base64
+                const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
+                
+                const putRes = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: 'تحديث بيانات Cortex Tracker (آلي)',
+                        content: contentBase64,
+                        sha: sha,
+                        branch: 'main'
+                    })
                 });
+                
+                if(putRes.ok) {
+                    statusUI.innerHTML = '<i class="fas fa-check"></i> تم التحديث! (سيظهر للطلاب خلال 60 ثانية)';
+                    setTimeout(() => statusUI.style.display = 'none', 3000);
+                } else {
+                    throw new Error();
+                }
+            } catch(e) {
+                statusUI.innerHTML = '<i class="fas fa-times"></i> فشل الرفع، تأكد من الـ Token.';
+                setTimeout(() => statusUI.style.display = 'none', 4000);
             }
         }
 
@@ -319,25 +370,10 @@
             let savedState = await getLocal('studentData', 'state');
             if(savedState) studentState = savedState;
 
-            let offlineGlobal = await getLocal('globalStore', 'cortexGlobalData');
-            if(offlineGlobal && offlineGlobal.subjects) {
-                globalData = offlineGlobal;
-            } else {
-                globalData.subjects = JSON.parse(JSON.stringify(defaultSubjects));
-            }
+            globalData.subjects = JSON.parse(JSON.stringify(defaultSubjects));
+            await fetchGitHubData(); // سحب التعديلات من ملف data.json
 
-            if(dbRef) {
-                dbRef.on('value', async (snapshot) => {
-                    const data = snapshot.val();
-                    if(data && data.subjects) { 
-                        globalData = data; 
-                        await saveLocal('globalStore', 'cortexGlobalData', JSON.parse(JSON.stringify(globalData))); 
-                    }
-                    renderTable(); updateZanka(); applyGlobals();
-                });
-            } else {
-                renderTable(); updateZanka(); applyGlobals();
-            }
+            renderTable(); updateZanka(); applyGlobals();
 
             if(!studentState.name) {
                 document.getElementById('welcomeMsgDisplay').innerText = globalData.welcomeMessage;
@@ -361,7 +397,7 @@
             if(name) { studentState.name = name; await saveLocal('studentData', 'state', studentState); closeModal('welcomeModal'); handleLoginSuccess(); }
         }
 
-        // --- الزووم ---
+        // الزووم
         const zoomWrapper = document.getElementById('zoomWrapper');
         let initialDistance = 0, initialBoxSize = 130, currentBoxSize = 130;
         zoomWrapper.addEventListener('touchstart', (e) => {
@@ -388,7 +424,6 @@
             }
         }, {passive: false});
 
-        // ---------------- الحل الأسطوري لمنع تكرار النسخ (Atomic Rendering) ----------------
         let currentRenderId = 0;
         async function renderTable() {
             const renderId = ++currentRenderId;
@@ -415,8 +450,6 @@
                     for(let lec of sec.lectures) {
                         const prog = studentState.progress[lec.id] || {};
                         const hasFile = await getLocal('files', lec.id) ? true : false;
-                        
-                        // الإجهاض إذا بدأت عملية رسم أحدث لمنع التكرار (Race Condition Fix)
                         if(renderId !== currentRenderId) return; 
 
                         let boxClasses = 'lec-box';
@@ -430,13 +463,7 @@
                 if(sub.sections.length > 1 || sub.sections[0].name !== '') subCol.appendChild(subSecCol);
                 row.appendChild(subCol); row.appendChild(lecCol); fragment.appendChild(row);
             }
-            
-            // التأكد النهائي ووضع العناصر في الشاشة بضربة واحدة
-            if(renderId === currentRenderId) {
-                const table = document.getElementById('trackerTable');
-                table.innerHTML = '';
-                table.appendChild(fragment);
-            }
+            if(renderId === currentRenderId) { const table = document.getElementById('trackerTable'); table.innerHTML = ''; table.appendChild(fragment); }
         }
 
         function formatDate(dateStr) { if(!dateStr) return ''; const d = new Date(dateStr); return `${d.getDate()}/${d.getMonth()+1}`; }
@@ -494,13 +521,29 @@
             if(list.length > 0) { setTimeout(() => { const toast = document.getElementById('toastRemind'); document.getElementById('toastText').innerHTML = `لديك مراجعات مبرمجة لليوم:<br>${list.join('<br>')}`; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 8000); if(navigator.vibrate) navigator.vibrate([200, 100, 200]); }, 2000); }
         }
 
-        function openAdminLogin() {
+        async function openAdminLogin() {
             if(isAdminUnlocked) { document.getElementById('adminModal').style.display = 'flex'; return; }
             const pass = prompt("الرمز السري لمركز القيادة:"); if(!pass) return;
             if(pass === ADMIN_SECRET && studentState.name.trim() === "حمزة عمار") {
-                isAdminUnlocked = true; document.getElementById('adminWelcomeText').value = globalData.welcomeMessage; renderTable(); document.getElementById('adminModal').style.display = 'flex';
+                isAdminUnlocked = true; 
+                document.getElementById('adminWelcomeText').value = globalData.welcomeMessage; 
+                
+                // جلب التوكن القديم إن وُجد
+                const oldToken = await getLocal('adminStore', 'gh_token');
+                if(oldToken) document.getElementById('githubTokenInput').value = oldToken;
+
+                renderTable(); document.getElementById('adminModal').style.display = 'flex';
             } else alert("صلاحيات مرفوضة!");
         }
+
+        async function saveGitHubToken() {
+            const token = document.getElementById('githubTokenInput').value.trim();
+            if(token) {
+                await saveLocal('adminStore', 'gh_token', token);
+                alert("تم حفظ التوكن بأمان! النظام الآن سيتصل بمستودع GitHub مباشرة.");
+            }
+        }
+
         function exitAdminMode() { isAdminUnlocked = false; closeModal('adminModal'); renderTable(); }
         
         function adminQuickAdd(subId, secId) { 
@@ -514,7 +557,7 @@
             let sub = globalData.subjects.find(s => s.id === subId); let sec = sub.sections.find(s => s.id === secId); 
             if(sec.lectures.length > 0) { if(confirm("هل أنت متأكد من الحذف؟")) { sec.lectures.pop(); saveGlobalData(); } } 
         }
-        function adminAddSubject() { const subName = document.getElementById('adminNewSubName').value.trim(); if(!subName) return; globalData.subjects.push({ id: 'sub_' + Date.now(), name: subName, sections: [{id:'sec_' + Date.now(), name:'', lectures:[]}] }); saveGlobalData(); document.getElementById('adminNewSubName').value = ''; alert("تمت إضافة المادة."); }
+        function adminAddSubject() { const subName = document.getElementById('adminNewSubName').value.trim(); if(!subName) return; globalData.subjects.push({ id: 'sub_' + Date.now(), name: subName, sections: [{id:'sec_' + Date.now(), name:'', lectures:[]}] }); saveGlobalData(); document.getElementById('adminNewSubName').value = ''; alert("تمت الإضافة."); }
         
         function adminUpload(event, type) {
             const file = event.target.files[0]; if(!file) return;
@@ -531,7 +574,7 @@
                     const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
                     const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6); 
                     globalData[type] = compressedBase64;
-                    saveGlobalData(); alert("تم الرفع والحفظ بنجاح!");
+                    saveGlobalData(); 
                 };
                 img.src = e.target.result;
             };
