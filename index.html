@@ -259,11 +259,11 @@
         let isAdminUnlocked = false;
 
         // ==========================================
-        // 🚀 إعدادات GitHub API (غيّر هذه المتغيرات لتناسب حسابك)
+        // 🚀 إعدادات GitHub API 
         // ==========================================
-        const GITHUB_USERNAME = "11hamza11"; // ضع اسم حسابك هنا
-        const GITHUB_REPO = "Cortex_Lecture_Tracker_Online";  // ضع اسم المستودع هنا
-        const DATA_FILE_PATH = "data.json";   // سيتم إنشاء وتحديث هذا الملف آلياً
+        const GITHUB_USERNAME = "11hamza11"; 
+        const GITHUB_REPO = "Cortex_Lecture_Tracker_Online";  
+        const DATA_FILE_PATH = "data.json";   
 
         const DB_NAME = "CortexTeamTrackerGitHub"; 
         let localDB;
@@ -298,10 +298,9 @@
             { id: 'sub_8', name: 'أورام', sections: [{id:'sec_8', name:'', lectures:[]}] }
         ];
 
-        // جلب البيانات من GitHub (قراءة فقط لجميع الطلاب)
+        // جلب البيانات من GitHub
         async function fetchGitHubData() {
             try {
-                // نستخدم خدعة التوقيت لمنع المتصفح من تخزين النسخة القديمة
                 const res = await fetch(`${DATA_FILE_PATH}?t=${Date.now()}`);
                 if(res.ok) {
                     const data = await res.json();
@@ -318,34 +317,31 @@
         }
 
         // ----------------- رفع التعديلات آلياً كـ Commit في GitHub -----------------
-       // ----------------- رفع التعديلات آلياً كـ Commit في GitHub -----------------
         async function saveGlobalData() { 
             // تحديث الشاشة فوراً
             renderTable(); updateZanka(); applyGlobals();
             await saveLocal('adminStore', 'offlineBackup', JSON.parse(JSON.stringify(globalData)));
 
             const token = await getLocal('adminStore', 'gh_token');
-            if(!token) return; // إذا لم يكن هناك توكن، سيكتفي بالحفظ المحلي
+            if(!token) return; // حفظ محلي فقط في حال غياب التوكن
 
             const statusUI = document.getElementById('githubSyncStatus');
             statusUI.style.display = 'block';
             statusUI.innerHTML = '<i class="fas fa-code-branch fa-spin"></i> جاري رفع التعديلات لمستودع GitHub...';
 
             try {
-                // ملاحظة: تأكد أن فرعك في المستودع اسمه main، وإذا كان master قم بتغيير الكلمة هنا
-                const BRANCH_NAME = 'main'; 
-                const apiUrl = https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE_PATH};
+                const BRANCH_NAME = 'main'; // تأكد من اسم الفرع في مستودعك
+                const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE_PATH}`;
                 
                 // جلب SHA الملف الحالي للتحديث
-                const getRes = await fetch(apiUrl, { headers: { 'Authorization': token ${token} }});
+                const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` }});
                 let sha = null;
                 if(getRes.ok) { const getData = await getRes.json(); sha = getData.sha; }
                 
                 const contentStr = JSON.stringify(globalData, null, 2);
-                // تشفير يدعم اللغة العربية بصيغة Base64
                 const contentBase64 = btoa(unescape(encodeURIComponent(contentStr)));
                 
-                // الحل الهندسي لمنع خطأ 422: لا نرسل sha إذا كان الملف غير موجود
+                // هندسة الطلب لتجنب الأخطاء عند إنشاء الملف لأول مرة
                 let requestBody = {
                     message: 'تحديث بيانات Cortex Tracker (آلي)',
                     content: contentBase64,
@@ -355,7 +351,7 @@
                 
                 const putRes = await fetch(apiUrl, {
                     method: 'PUT',
-                    headers: { 'Authorization': token ${token}, 'Content-Type': 'application/json' },
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody)
                 });
                 
@@ -379,7 +375,7 @@
             if(savedState) studentState = savedState;
 
             globalData.subjects = JSON.parse(JSON.stringify(defaultSubjects));
-            await fetchGitHubData(); // سحب التعديلات من ملف data.json
+            await fetchGitHubData(); 
 
             renderTable(); updateZanka(); applyGlobals();
 
@@ -536,7 +532,6 @@
                 isAdminUnlocked = true; 
                 document.getElementById('adminWelcomeText').value = globalData.welcomeMessage; 
                 
-                // جلب التوكن القديم إن وُجد
                 const oldToken = await getLocal('adminStore', 'gh_token');
                 if(oldToken) document.getElementById('githubTokenInput').value = oldToken;
 
@@ -565,7 +560,7 @@
             let sub = globalData.subjects.find(s => s.id === subId); let sec = sub.sections.find(s => s.id === secId); 
             if(sec.lectures.length > 0) { if(confirm("هل أنت متأكد من الحذف؟")) { sec.lectures.pop(); saveGlobalData(); } } 
         }
-        function adminAddSubject() { const subName = document.getElementById('adminNewSubName').value.trim(); if(!subName) return; globalData.subjects.push({ id: 'sub_' + Date.now(), name: subName, sections: [{id:'sec_' + Date.now(), name:'', lectures:[]}] }); saveGlobalData(); document.getElementById('adminNewSubName').value = ''; alert("تمت الإضافة."); }
+        function adminAddSubject() { const subName = document.getElementById('adminNewSubName').value.trim(); if(!subName) return; globalData.subjects.push({ id: 'sub_' + Date.now(), name: subName, sections: [{id:'sec_' + Date.now(), name:'', lectures:[]}] }); saveGlobalData(); document.getElementById('adminNewSubName').value = ''; alert("تمت الإضافة للجدول."); }
         
         function adminUpload(event, type) {
             const file = event.target.files[0]; if(!file) return;
